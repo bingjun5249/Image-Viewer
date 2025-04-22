@@ -50,9 +50,32 @@ class ImageViewer:
 
         self.root.after(100, self.show_thumbnail)  # 썸네일을 보여주기 위한 초기화
 
+        self.config_path = os.path.join(os.path.dirname(__file__), "last_dir.txt")
+
+
     def select_directory(self):
-        folder_selected = filedialog.askdirectory(initialdir=os.path.expanduser("~"))
+    # 마지막 경로 불러오기
+        if os.path.exists(self.config_path):
+            try:
+                with open(self.config_path, "r", encoding="utf-8") as f:
+                    last_dir = f.read().strip()
+                    if not os.path.exists(last_dir):
+                        last_dir = os.path.expanduser("~")
+            except Exception:
+                last_dir = os.path.expanduser("~")
+        else:
+            last_dir = os.path.expanduser("~")
+
+        folder_selected = filedialog.askdirectory(initialdir=last_dir)
+        
         if folder_selected:
+            # 디렉토리 기억하기
+            try:
+                with open(self.config_path, "w", encoding="utf-8") as f:
+                    f.write(folder_selected)
+            except Exception as e:
+                print(f"[경고] 디렉토리 저장 실패: {e}")
+
             self.image_paths = [
                 os.path.join(folder_selected, f)
                 for f in os.listdir(folder_selected)
@@ -63,8 +86,8 @@ class ImageViewer:
             if self.image_paths:
                 self.show_image(self.current_index)
             else:
-                self.status_label.config(text="0 / 0")
                 messagebox.showinfo("알림", "이미지가 없습니다.")
+
 
 
     def show_next_image(self):
